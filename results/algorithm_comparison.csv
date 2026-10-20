@@ -1,0 +1,4 @@
+algorithm,requests,concurrency,successful_requests,failed_requests,error_rate_pct,avg_latency_ms,p50_latency_ms,p95_latency_ms,p99_latency_ms,throughput_rps,duration_s,backend_distribution
+round_robin,90,9,90,0,0.0,213.71,206.42,390.49,499.82,39.44,2.28,"{""b1"": 30, ""b2"": 30, ""b3"": 30}"
+weighted_rr,90,9,90,0,0.0,265.48,140.09,1231.09,1309.05,32.52,2.77,"{""b1"": 50, ""b2"": 30, ""b3"": 10}"
+least_conn,90,9,90,0,0.0,101.91,81.88,156.81,227.66,78.64,1.14,"{""b1"": 61, ""b2"": 24, ""b3"": 5}"

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Load Balancer + Health Monitor - Project Presentation & Guide</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-sub-bg: #1a2234;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --accent-grad: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      --border: #1f293d;
+      --border-focus: #38bdf8;
+      --term-bg: #060911;
+      --term-bar: #151d2f;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --purple: #a855f7;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-size: 10.5pt;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10px !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .card, .terminal-window, .diagram-box {
+        background: #ffffff !important;
+        border: 1px solid #d1d5db !important;
+        color: #111827 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+
+      pre, code, .term-body {
+        background: #f3f4f6 !important;
+        color: #111827 !important;
+        border: 1px solid #e5e7eb;
+      }
+
+      .term-prompt { color: #0284c7 !important; }
+      .term-out { color: #374151 !important; }
+      h1, h2, h3 { color: #0f172a !important; }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      padding-bottom: 28px;
+      margin-bottom: 36px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      margin-bottom: 14px;
+    }
+
+    .badge-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 800px;
+    }
+
+    .header-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent-grad);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--card-sub-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #232e47;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      margin-bottom: 18px;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--accent);
+      padding-left: 14px;
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      margin: 22px 0 10px 0;
+      color: #e2e8f0;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: #cbd5e1;
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: #cbd5e1;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 22px 0;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Terminal Mockups */
+    .terminal-window {
+      background: var(--term-bg);
+      border: 1px solid #24314c;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 18px 0 24px 0;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .term-bar {
+      background: var(--term-bar);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #24314c;
+    }
+
+    .term-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    .term-title {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-family: Consolas, monospace;
+      font-weight: 600;
+    }
+
+    .term-body {
+      padding: 16px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      color: #e2e8f0;
+      white-space: pre;
+    }
+
+    .term-prompt {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .term-cmd {
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+
+    .term-out {
+      color: #94a3b8;
+    }
+
+    .term-success {
+      color: #34d399;
+    }
+
+    .term-info {
+      color: #818cf8;
+    }
+
+    .term-warn {
+      color: #fbbf24;
+    }
+
+    /* Diagram */
+    .diagram-box {
+      background: var(--term-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: Consolas, monospace;
+      color: #38bdf8;
+      font-size: 0.84rem;
+      line-height: 1.42;
+      overflow-x: auto;
+      white-space: pre;
+      margin-bottom: 20px;
+    }
+
+    /* Pill Badges */
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: Consolas, monospace;
+    }
+
+    .tag-healthy { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+    .tag-draining { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+    .tag-unhealthy { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+    .tag-accent { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+
+    /* Key Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin: 20px 0;
+    }
+
+    .feature-card {
+      background: var(--card-sub-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .feature-card h4 {
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    /* Quick jump nav */
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      padding: 16px;
+      background: var(--card-sub-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.08);
+      transition: background 0.2s;
+    }
+
+    .toc a:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="badge-pill">Computer Networks Project &bull; Live &amp; Tested</div>
+      <h1>Dynamic Load Balancer + Health Monitor</h1>
+      <p class="subtitle">
+        A complete guide explaining project architecture, runtime algorithms, active failover, Wireshark packet capture, and step-by-step terminal execution with real outputs.
+      </p>
+
+      <div class="header-actions no-print">
+        <button class="btn btn-primary" onclick="window.print()">
+          Save / Print as PDF
+        </button>
+        <a class="btn btn-secondary" href="http://127.0.0.1:8080/dashboard" target="_blank">
+          Open Live Dashboard (Port 8080)
+        </a>
+      </div>
+    </header>
+
+    <!-- QUICK JUMP TOC -->
+    <nav class="toc no-print">
+      <a href="#overview">1. Project Statement &amp; Overview</a>
+      <a href="#architecture">2. System Architecture</a>
+      <a href="#algorithms">3. The 4 Algorithms</a>
+      <a href="#health-engine">4. Health Monitor &amp; Failover</a>
+      <a href="#step-by-step">5. Step-by-Step Terminal Execution</a>
+      <a href="#dashboard-guide">6. Live Dashboard Guide</a>
+      <a href="#wireshark">7. Wireshark Packet Capture</a>
+      <a href="#viva">8. Presentation Script &amp; Viva Q&amp;A</a>
+    </nav>
+
+    <!-- 1. STATEMENT & OVERVIEW -->
+    <section id="overview" class="card">
+      <h2>1. Project Statement &amp; High-Level Overview</h2>
+      <p>
+        <strong>Statement:</strong> <em>"We will build a system where multiple backend servers handle client requests through a central load balancer. The load balancer will distribute incoming traffic using algorithms like Round Robin, Weighted Round Robin, and Least Connections. A health monitoring system will continuously check whether each server is available, and if a server goes down, the load balancer will automatically stop sending requests to it and redirect traffic to healthy servers. We can also demonstrate server failure/recovery, response time, traffic distribution, and network packets using Wireshark."</em>
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <h4>Dual-Port Concurrency</h4>
+          <p>Runs the high-speed Reverse Proxy on <strong>Port 8080</strong> and the administrative control plane on <strong>Port 9090</strong> simultaneously on an async loop.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Zero-Downtime Reconfiguration</h4>
+          <p>Switch algorithms (Round Robin &rarr; Least Connections) or drain/add servers at runtime via the Admin API without restarting the proxy.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Active Heartbeat &amp; Auto-Failover</h4>
+          <p>Background probes ping <code>GET /health</code> every 2s. If a server misses 3 checks, it is isolated instantly with zero dropped requests.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Real-time Dashboard &amp; Benchmark</h4>
+          <p>Live glassmorphism web control panel with Chart.js visualization, plus an async benchmark tool logging P50, P95, and P99 latencies.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Role</th>
+            <th>Files</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Reverse Proxy</strong></td>
+            <td>Layer 7 HTTP gateway, request streaming, connection tracking, header injection (<code>X-Served-By</code>)</td>
+            <td><code>loadbalancer/proxy.py</code>, <code>loadbalancer/main.py</code></td>
+          </tr>
+          <tr>
+            <td><strong>Scheduling Engine</strong></td>
+            <td>Round Robin, Smooth Weighted Round Robin (Nginx algorithm), Least Connections, IP Hash</td>
+            <td><code>loadbalancer/algorithms/</code></td>
+          </tr>
+          <tr>
+            <td><strong>Health Monitor</strong></td>
+            <td>Background active heartbeat prober, threshold state machine, slow-start recovery warmup</td>
+            <td><code>loadbalancer/health.py</code></td>
+          </tr>
+          <tr>
+            <td><strong>Admin &amp; Control</strong></td>
+            <td>REST API for live runtime algorithm switching, backend draining, and full audit event logging</td>
+            <td><code>loadbalancer/admin.py</code></td>
+          </tr>
+          <tr>
+            <td><strong>Benchmarking Suite</strong></td>
+            <td>Asynchronous load generator, statistical percentile parser, failure simulator</td>
+            <td><code>tools/load_gen.py</code>, <code>tools/analyze_results.py</code>, <code>tools/failure_sim.py</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 2. ARCHITECTURE -->
+    <section id="architecture" class="card">
+      <h2>2. System Architecture &amp; Request Lifecycle</h2>
+      <p>
+        Clients never talk directly to backends. All traffic enters the central gateway on <strong>port 8080</strong>. The proxy queries the active scheduling strategy, acquires an active connection lock, forwards the request asynchronously via <code>HTTPX</code>, and returns the response with tracking metadata:
+      </p>
+
+      <div class="diagram-box">
+                      +-------------------------------------------------------+
+                      |               Client Traffic / Benchmarks             |
+                      +-------------------------------------------------------+
+                                                  |
+                                                  v
+         +---------------------------------------------------------------------------------+
+         |                 PORT 8080: Dynamic Load Balancer (Proxy Gateway)                |
+         |---------------------------------------------------------------------------------|
+         |  1. Receives HTTP request (GET, POST, PUT, DELETE...)                           |
+         |  2. Consults active Algorithm (Round Robin / Weighted RR / Least Conn / IP Hash)|
+         |  3. Acquires connection counter; forwards via Async HTTPX Client                |
+         |  4. Injects tracking header:  X-Served-By: &lt;backend_name&gt;                       |
+         |  5. Serves Live Web Monitoring Dashboard at  /dashboard                         |
+         +---------------------------------------------------------------------------------+
+                                                  |
+                             +--------------------+--------------------+
+                             |                    |                    |
+                             v                    v                    v
+                      +--------------+     +--------------+     +--------------+
+                      |  Backend b1  |     |  Backend b2  |     |  Backend b3  |
+                      |  Port: 5001  |     |  Port: 5002  |     |  Port: 5003  |
+                      |  Delay: 50ms |     |  Delay: 100ms|     |  Delay: 200ms|
+                      |  Weight: 5   |     |  Weight: 3   |     |  Weight: 1   |
+                      +--------------+     +--------------+     +--------------+
+                             ^                    ^                    ^
+                             |                    |                    |
+         +---------------------------------------------------------------------------------+
+         |                    PORT 9090: Health Monitor &amp; Admin Plane                      |
+         |---------------------------------------------------------------------------------|
+         |  * Health Monitor Loop: Probes GET /health on all backends every 2.0s           |
+         |  * Threshold Logic: 3 failures -&gt; UNHEALTHY; 2 passes -&gt; HEALTHY (10s warmup)   |
+         |  * Admin Endpoints: /admin/backends, /admin/algorithm, /admin/health, /metrics   |
+         |  * Full Audit Logging: Logs every drain, undrain, recovery, and add/remove event|
+         +---------------------------------------------------------------------------------+</div>
+    </section>
+
+    <!-- 3. ALGORITHMS -->
+    <section id="algorithms" class="card">
+      <h2>3. The 4 Load Balancing Algorithms Detailed</h2>
+
+      <h3>1. Round Robin (<code>round_robin.py</code>)</h3>
+      <p>
+        Evenly cycles requests through the list of healthy backends in fixed rotational order:
+        <code>b1 &rarr; b2 &rarr; b3 &rarr; b1 &rarr; b2 &rarr; b3</code>.
+        Best when all backend servers have identical CPU/memory specs and predictable response times.
+      </p>
+
+      <h3>2. Smooth Weighted Round Robin (<code>weighted_rr.py</code>)</h3>
+      <p>
+        The mathematical algorithm utilized by Nginx. Rather than sending 5 requests in a row to <code>b1</code> (which causes server queue spikes), it smoothly interleaves selections based on configured weights (5 : 3 : 1):
+        <code>b1 &rarr; b2 &rarr; b1 &rarr; b3 &rarr; b1 &rarr; b2 &rarr; b1 &rarr; b2 &rarr; b1</code>.
+        Prevents queue saturation on high-capacity nodes while still distributing 5x more work to <code>b1</code>.
+      </p>
+
+      <h3>3. Least Connections (<code>least_conn.py</code>)</h3>
+      <p>
+        Inspects the <code>active_connections</code> counter of each healthy node in real time. Routes incoming traffic to the backend currently processing the fewest active concurrent requests. In our cluster:
+      </p>
+      <ul>
+        <li><code>b1</code> finishes requests in 50ms (releases connection quickly).</li>
+        <li><code>b3</code> takes 200ms (holds connection 4x longer).</li>
+        <li>Under concurrent load, Least Connections naturally pushes more traffic to the faster server (<code>b1</code>), maximizing overall cluster throughput!</li>
+      </ul>
+
+      <h3>4. IP Hash (<code>ip_hash.py</code>)</h3>
+      <p>
+        Computes <code>hash(client_ip) % len(healthy_backends)</code>. Guarantees session stickiness: requests from the same user or machine consistently land on the exact same backend, preserving in-memory sessions without external Redis caches.
+      </p>
+    </section>
+
+    <!-- 4. HEALTH MONITOR & FAILOVER -->
+    <section id="health-engine" class="card">
+      <h2>4. Active Health Monitoring &amp; Automatic Failover</h2>
+
+      <h3>The State Machine</h3>
+      <ul>
+        <li><strong>Probe Frequency:</strong> Every 2.0 seconds, the background health task issues an async <code>GET http://&lt;host&gt;:&lt;port&gt;/health</code> request with a 1.0s timeout.</li>
+        <li><strong>Failure Detection (3 Strikes):</strong>
+          <ul>
+            <li>1st failure: Backend marked <span class="tag tag-warning" style="background: rgba(251,191,36,0.15); color: #fbbf24;">SUSPECT</span>.</li>
+            <li>3rd consecutive failure: Backend marked <span class="tag tag-unhealthy">UNHEALTHY</span> and instantly evicted from active routing.</li>
+          </ul>
+        </li>
+        <li><strong>Zero Dropped Requests:</strong> If a backend crashes right during a request, the proxy catches the network error and automatically retries an alternate healthy backend (up to <code>retry_count = 1</code>).</li>
+        <li><strong>Automatic Recovery:</strong> When the crashed server restarts, it must pass 2 consecutive health checks before re-entering the cluster.</li>
+        <li><strong>Slow-Start Ramp-Up:</strong> Once recovered, its effective weight scales up gradually over 10 seconds (<code>slow_start_s = 10</code>) to prevent cold caches from being overwhelmed.</li>
+        <li><strong>Audit Logging:</strong> All transitions (failures, recoveries, drains, undrains, algorithm changes) are logged in memory and served at <code>GET /admin/health</code>.</li>
+      </ul>
+    </section>
+
+    <!-- 5. STEP-BY-STEP TERMINAL EXECUTION -->
+    <section id="step-by-step" class="card">
+      <h2>5. Step-by-Step Terminal Walkthrough (Commands &amp; Outputs)</h2>
+      <p>Follow these exact steps in 3 separate PowerShell or Command Prompt terminals:</p>
+
+      <!-- TERMINAL 1 -->
+      <h3>Step 1 &bull; Terminal 1: Start All 3 Demo Backends</h3>
+      <p>Spawns <code>b1</code> (port 5001, 50ms delay), <code>b2</code> (port 5002, 100ms delay), and <code>b3</code> (port 5003, 200ms delay):</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 1: Backends</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">.\.venv\Scripts\Activate.ps1</span>
+<span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">python tools/failure_sim.py demo</span>
+<span class="term-out">
+Starting all demo backends...
+Starting b1 on port 5001...
+b1 started with PID 14220
+Starting b2 on port 5002...
+b2 started with PID 18304
+Starting b3 on port 5003...
+b3 started with PID 9112
+
+==================================================
+BACKEND STATUS
+==================================================
+b1         RUNNING    PID=14220
+b2         RUNNING    PID=18304
+b3         RUNNING    PID=9112
+==================================================
+
+Demo backends are running.
+Press Ctrl+C to stop all managed backends.</span></div>
+      </div>
+
+      <!-- TERMINAL 2 -->
+      <h3>Step 2 &bull; Terminal 2: Start the Central Load Balancer &amp; Admin Plane</h3>
+      <p>Launches both the proxy gateway (port 8080) and the health monitor/admin API (port 9090):</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 2: Load Balancer</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">.\.venv\Scripts\Activate.ps1</span>
+<span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">python -m loadbalancer.main</span>
+<span class="term-out">
+======================================================================
+Dynamic Load Balancer + Health Monitor
+======================================================================
+Load Balancer : http://127.0.0.1:8080
+Admin API     : http://127.0.0.1:9090
+Algorithm     : round_robin
+======================================================================
+Configured backends:
+  b1 -&gt; 127.0.0.1:5001 (weight=5)
+  b2 -&gt; 127.0.0.1:5002 (weight=3)
+  b3 -&gt; 127.0.0.1:5003 (weight=1)
+======================================================================
+INFO:     Started server process [17068]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://127.0.0.1:9090 (Press CTRL+C to quit)</span></div>
+      </div>
+
+      <!-- TERMINAL 3 -->
+      <h3>Step 3 &bull; Terminal 3: Test Requests with curl.exe</h3>
+      <p>Send test traffic through the load balancer gateway to observe routing:</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 3: Client Traffic</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">curl.exe http://127.0.0.1:8080/some/path</span>
+<span class="term-out">{
+  "status": "success",
+  "message": "Request served successfully",
+  "backend": <span class="term-success">"b1"</span>,
+  "path": "/some/path",
+  "method": "GET",
+  "request_id": "dbc6a793-82a0-47d0-bad6-7f5176b34b4e",
+  "client_ip": "127.0.0.1",
+  "delay_ms": 50,
+  "timestamp": 1791793054.505
+}</span>
+
+<span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">curl.exe -i http://127.0.0.1:8080/some/path</span>
+<span class="term-out">HTTP/1.1 200 OK
+content-type: application/json
+<span class="term-info">X-Served-By: b2</span>
+Date: Mon, 12 Oct 2026 08:35:10 GMT
+Server: uvicorn
+
+{"status":"success","backend":"b2",...}</span></div>
+      </div>
+
+      <!-- BENCHMARK -->
+      <h3>Step 4 &bull; Terminal 3: Run High-Concurrency Load Generator</h3>
+      <p>Simulate 100 concurrent requests across the cluster:</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 3: Benchmark</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">python tools/load_gen.py --requests 100 --concurrency 10</span>
+<span class="term-out">
+Starting load test...
+URL         : http://127.0.0.1:8080/test
+Requests    : 100
+Concurrency : 10
+
+============================================================
+LOAD TEST RESULTS
+============================================================
+Total requests      : 100
+Successful requests : 100
+Failed requests     : 0
+<span class="term-success">Success rate        : 100.00%</span>
+Average latency     : 150.22 ms
+P95 latency         : 319.10 ms
+<span class="term-info">Throughput          : 64.43 req/s</span>
+Total test time     : 1.55 s
+============================================================
+CSV saved to: results/load_test.csv</span></div>
+      </div>
+
+      <!-- ANALYZE -->
+      <h3>Step 5 &bull; Terminal 3: Analyze Statistical Results</h3>
+      <p>Compute percentiles (P50, P95, P99) and per-backend distribution:</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 3: Latency Analysis</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">python tools/analyze_results.py results/load_test.csv</span>
+<span class="term-out">
+=================================================================
+DYNAMIC LOAD BALANCER - RESULT ANALYSIS
+=================================================================
+Input file          : results\load_test.csv
+Total requests      : 100
+Successful requests : 100
+Failed requests     : 0
+Success rate        : 100.00%
+
+Latency:
+  Average : 150.22 ms
+  Median  : 126.19 ms
+  P50     : 126.19 ms
+  P95     : 319.11 ms
+  P99     : 363.81 ms
+
+Requests by backend:
+  b1              requests=68     errors=0
+  b2              requests=27     errors=0
+  b3              requests=5      errors=0
+
+HTTP status codes:
+  200: 100
+=================================================================</span></div>
+      </div>
+
+      <!-- RUNTIME DEMO -->
+      <h3>Step 6 &bull; Terminal 3: Live Algorithm Switching Demo</h3>
+      <p>Switch algorithm on the fly to <code>least_conn</code> without stopping the proxy:</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 3: Dynamic Algorithm Switch</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">python tools/runtime_demo.py --algorithm least_conn</span>
+<span class="term-out">
+======================================================================
+DYNAMIC LOAD BALANCER RUNTIME DEMONSTRATION
+======================================================================
+BACKEND STATUS
+----------------------------------------------------------------------
+b1       127.0.0.1:5001   state=HEALTHY      weight=5   connections=0
+b2       127.0.0.1:5002   state=HEALTHY      weight=3   connections=0
+b3       127.0.0.1:5003   state=HEALTHY      weight=1   connections=0
+
+Switching algorithm to: <span class="term-info">least_conn</span>
+PUT http://127.0.0.1:9090/admin/algorithm
+Status: 200
+{
+  "status": "updated",
+  "algorithm": "least_conn"
+}
+
+Sending 20 test requests...
+Request 1 -&gt; Served by b1
+Request 2 -&gt; Served by b2
+Request 3 -&gt; Served by b1
+...
+Demo completed.</span></div>
+      </div>
+
+      <!-- PYTEST -->
+      <h3>Step 7 &bull; Terminal 3: Run Full Automated Test Suite</h3>
+      <p>Executes 23 tests covering unit math, failovers, and HTTP admin routers:</p>
+
+      <div class="terminal-window">
+        <div class="term-bar">
+          <div class="term-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="term-title">Terminal 3: Automated Pytest Suite</div>
+          <div></div>
+        </div>
+        <div class="term-body"><span class="term-prompt">PS C:\CN PROJECT&gt;</span> <span class="term-cmd">pytest</span>
+<span class="term-out">
+============================= test session starts =============================
+platform win32 -- Python 3.13.15, pytest-8.4.2, pluggy-1.6.0
+rootdir: C:\CN PROJECT
+
+tests\test_algorithms.py .....                                           [ 21%]
+tests\test_failover.py .....                                             [ 43%]
+tests\test_health.py ...                                                 [ 56%]
+tests\test_integration.py ..........                                     [100%]
+
+======================== <span class="term-success">23 passed</span>, 1 warning in 6.15s ========================</span></div>
+      </div>
+    </section>
+
+    <!-- 6. DASHBOARD GUIDE -->
+    <section id="dashboard-guide" class="card">
+      <h2>6. Live Web Dashboard Walkthrough</h2>
+      <p>
+        Open your web browser and navigate to:
+        <a href="http://127.0.0.1:8080/dashboard" target="_blank" style="color: var(--accent); font-weight: bold;">http://127.0.0.1:8080/dashboard</a>
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <h4>Top Control Panel</h4>
+          <p>Features the <strong>Algorithm Dropdown</strong> (select from Round Robin, Weighted RR, Least Connections, IP Hash) with the <strong>Apply Algorithm</strong> button, <strong>Refresh Now</strong>, and <strong>Restore All 3 Backends</strong>.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Live Metric Cards</h4>
+          <p>Instant telemetry tracking <strong>Total Requests</strong>, <strong>Total Errors</strong>, <strong>Error Rate (0.00%)</strong>, <strong>Throughput (RPS)</strong>, <strong>Average Latency</strong>, <strong>P95 Latency</strong>, and <strong>Healthy Backends Count</strong>.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Backend Cards &amp; Node Controls</h4>
+          <p>Displays each server card with its live state badge (<span class="tag tag-healthy">HEALTHY</span>, <span class="tag tag-draining">DRAINING</span>, <span class="tag tag-unhealthy">UNHEALTHY</span>), active connections, requests, and action buttons (<strong>Change Weight</strong>, <strong>Drain / Undrain</strong>, <strong>Remove</strong>).</p>
+        </div>
+        <div class="feature-card">
+          <h4>Health Monitor Events Table</h4>
+          <p>Real-time audit log of all heartbeat checks and administrative operations. Displays exact timestamp, backend name, event (<code>INITIAL_HEALTH_CHECK_OK</code>, <code>BACKEND_DRAINED</code>, etc.), previous state, and new state.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. WIRESHARK -->
+    <section id="wireshark" class="card">
+      <h2>7. Network Packet Capture Using Wireshark</h2>
+      <p>To demonstrate network protocol communication to your faculty using Wireshark:</p>
+
+      <ol>
+        <li><strong>Open Wireshark</strong> on your machine.</li>
+        <li>Select the capture interface named <strong>"Adapter for loopback traffic capture"</strong> (or <strong>"Npcap Loopback Adapter"</strong>).</li>
+        <li>In the green Wireshark display filter bar at the top, enter:
+          <pre><code>tcp.port == 8080 || tcp.port == 5001 || tcp.port == 5002 || tcp.port == 5003</code></pre>
+        </li>
+        <li>Click <strong>Apply</strong> and start the capture.</li>
+        <li>Run a test request in PowerShell:
+          <pre><code>curl.exe http://127.0.0.1:8080/api/test</code></pre>
+        </li>
+      </ol>
+
+      <h3>What to Explain in the Packet Trace:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Traffic Stream</th>
+            <th>Ports Involved</th>
+            <th>What to Point Out in Wireshark</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Client &rarr; Gateway</strong></td>
+            <td>Client ephemeral port &rarr; <code>8080</code></td>
+            <td>Shows the TCP 3-Way Handshake (<code>SYN</code> &rarr; <code>SYN, ACK</code> &rarr; <code>ACK</code>) followed by the HTTP <code>GET /api/test</code> request.</td>
+          </tr>
+          <tr>
+            <td><strong>Gateway &rarr; Backend</strong></td>
+            <td>Gateway &rarr; <code>5001</code> / <code>5002</code> / <code>5003</code></td>
+            <td>Shows the Load Balancer proxying the request to the chosen backend server.</td>
+          </tr>
+          <tr>
+            <td><strong>Backend &rarr; Client</strong></td>
+            <td><code>5001</code> &rarr; Gateway &rarr; Client</td>
+            <td>Shows the HTTP response with the custom tracking header: <code>X-Served-By: b1</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Periodic Heartbeats</strong></td>
+            <td>Port <code>9090</code> &harr; <code>5001/5002/5003</code></td>
+            <td>Every 2 seconds, you will see periodic <code>GET /health</code> HTTP requests sent by the Health Monitor thread.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 8. PRESENTATION SCRIPT & VIVA -->
+    <section id="viva" class="card">
+      <h2>8. Presentation Script &amp; Faculty Viva Q&amp;A</h2>
+
+      <h3>5-Minute Live Demonstration Flow:</h3>
+      <ol>
+        <li><strong>Minute 1:</strong> Open <code>http://127.0.0.1:8080/dashboard</code>. Introduce the concept of Layer 7 HTTP reverse proxying vs Layer 4 TCP load balancing.</li>
+        <li><strong>Minute 2:</strong> Run <code>python tools/load_gen.py --requests 100 --concurrency 10</code>. Point out the even split of requests across <code>b1</code>, <code>b2</code>, and <code>b3</code> under Round Robin.</li>
+        <li><strong>Minute 3:</strong> Use the Dashboard dropdown to switch algorithm live to <code>weighted_rr</code>. Explain that <code>b1</code> has weight 5, <code>b2</code> has 3, and <code>b3</code> has 1. Run the load test again and show that <code>b1</code> absorbs the proportional majority without restarting the proxy.</li>
+        <li><strong>Minute 4:</strong> Simulate backend failure: In Terminal 1, stop backend <code>b2</code> (or click Drain). Show the Health Monitor turning <code>b2</code> red and routing 100% of new traffic to <code>b1</code> and <code>b3</code> with <strong>zero dropped requests</strong>.</li>
+        <li><strong>Minute 5:</strong> Show <code>python tools/analyze_results.py results/load_test.csv</code> displaying 100% success rate, P95 latency figures, and show the packet capture in Wireshark.</li>
+      </ol>
+
+      <h3>Top 5 Faculty Viva Questions &amp; Answers:</h3>
+      <div style="margin-top: 14px;">
+        <p><strong>Q1: Why is this a Layer 7 load balancer instead of Layer 4?</strong><br>
+        <em>Answer:</em> Layer 4 load balancers only inspect IP addresses and TCP port numbers without looking at payload. Our system operates at Layer 7 (Application Layer): it parses HTTP paths (<code>/{path:path}</code>), HTTP headers (injects <code>X-Served-By</code>), evaluates client IP hashes, and checks application health endpoints (<code>/health</code>).
+        </p>
+
+        <p><strong>Q2: How does your health monitor avoid false positives?</strong><br>
+        <em>Answer:</em> It implements a consecutive failure threshold (<code>unhealthy_threshold = 3</code>). A single temporary network blip only marks the server as <code>SUSPECT</code>; 3 consecutive failed probes are required before evicting it. For recovery, it requires 2 consecutive successful checks (<code>healthy_threshold = 2</code>) followed by a 10s slow-start warmup.
+        </p>
+
+        <p><strong>Q3: How does Least Connections work in asynchronous Python?</strong><br>
+        <em>Answer:</em> Each backend object maintains an <code>active_connections</code> counter protected by an <code>asyncio.Lock</code>. When a request is forwarded, the lock is acquired and counter incremented; when the response streams back, the counter is decremented. The algorithm inspects this counter in real time to route to the least-burdened server.
+        </p>
+
+        <p><strong>Q4: What makes Smooth Weighted Round Robin better than simple Weighted Round Robin?</strong><br>
+        <em>Answer:</em> Simple Weighted Round Robin sends bursts of 5 consecutive requests to the heaviest node before touching others. Smooth Weighted Round Robin (the Nginx algorithm) continuously recalculates current weights and smoothly interleaves servers (e.g. <code>b1, b2, b1, b3, b1</code>), preventing high-weight server queue spikes.
+        </p>
+
+        <p><strong>Q5: What happens if a backend fails mid-request?</strong><br>
+        <em>Answer:</em> The Proxy Engine wraps the forwarding call in an exception block. If a backend fails or times out, the proxy isolates the failure, acquires an alternate healthy backend from the pool, and retries the request up to <code>retry_count = 1</code>, ensuring zero 502/504 errors for clients.
+        </p>
+      </div>
+    </section>
+
+  </div>
+</body>
+
+</html>

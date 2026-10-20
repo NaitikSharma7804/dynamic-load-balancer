@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetPulse Hardware Store — Network Traffic Demonstration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/assets/styles.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <aside class="demo-banner">
+    <div class="banner-content">
+      <span class="pulse-indicator"></span>
+      <strong>NETPULSE LIVE DEMO ENVIRONMENT</strong>: Every click, search, and checkout routes through the L7 Reverse Proxy on <code>:8080</code> to backend pool (<code>b1</code>, <code>b2</code>, <code>b3</code>).
+    </div>
+    <div class="banner-links">
+      <a href="/dashboard" class="banner-btn" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-6 6"/></svg>
+        Open Observatory Dashboard
+      </a>
+    </div>
+  </aside>
+
+  <!-- Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand-group">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">NetPulse <span class="highlight">Store</span></span>
+          <span class="brand-subtitle">Enterprise Networking Equipment</span>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Badge -->
+      <div class="telemetry-pill" id="telemetryPill" title="Last API response routed through NetPulse Proxy">
+        <span class="telemetry-dot"></span>
+        <span class="telemetry-label">LAST SERVED BY:</span>
+        <span class="backend-tag" id="lastServingBackend">—</span>
+        <span class="telemetry-latency" id="lastLatency">— ms</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="nav-actions">
+        <button class="nav-btn activity-toggle" id="toggleActivityBtn" title="View Real-Time Network Activity">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span class="btn-text">Network Activity</span>
+          <span class="activity-counter" id="activityCounter">0</span>
+        </button>
+
+        <button class="nav-btn cart-btn" id="cartBtn" title="Open Shopping Cart">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="btn-text">Cart</span>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+        Reverse Proxy Entry Point: Port 8080 &bull; Distributed Server Fleet
+      </div>
+      <h1 class="hero-title">High-Performance Networking Hardware</h1>
+      <p class="hero-desc">
+        Browse enterprise 10G routers, core managed switches, Wi-Fi 7 access points, and optical transceivers.
+        Interact with the catalogue to generate live HTTP load balanced across server nodes.
+      </p>
+
+      <!-- Search & Filters Toolbar -->
+      <div class="toolbar-box">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search products by model, feature (e.g. '10G', 'switch', 'PoE', 'SFP+')..." autocomplete="off">
+          <button id="clearSearchBtn" class="clear-btn" style="display:none;">&times;</button>
+        </div>
+
+        <div class="category-tabs" id="categoryTabs">
+          <!-- Populated dynamically via GET /api/categories -->
+          <button class="cat-pill active" data-category="all">All Products</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="catalog-header">
+      <div class="catalog-info">
+        <h2 class="section-title">Hardware Catalogue</h2>
+        <span class="product-count" id="productCount">Loading catalogue...</span>
+      </div>
+      <div class="catalog-actions">
+        <button id="refreshCatalogBtn" class="action-btn-sm" title="Re-fetch products through proxy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          Refresh Feed
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Banner (if proxy or all backends fail) -->
+    <div class="error-banner" id="errorBanner" style="display: none;">
+      <div class="error-icon">⚠️</div>
+      <div class="error-text">
+        <strong id="errorTitle">Connection Error</strong>
+        <p id="errorMessage">Unable to reach the backend pool through the reverse proxy.</p>
+      </div>
+      <button class="error-retry-btn" id="retryFetchBtn">Retry</button>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="productGrid">
+      <!-- Injected via JavaScript -->
+    </div>
+  </main>
+
+  <!-- Shopping Cart Drawer (Off-Canvas) -->
+  <div class="drawer-overlay" id="cartOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <h3>Your Shopping Cart</h3>
+      </div>
+      <button class="close-drawer-btn" id="closeCartBtn">&times;</button>
+    </div>
+
+    <div class="drawer-body" id="cartItemsList">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <div class="drawer-footer" id="cartFooter">
+      <div class="cart-summary-table">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="cartSubtotal">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>Tax (Est. 8%)</span>
+          <span id="cartTax">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>Standard Freight</span>
+          <span id="cartShipping">$0.00</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>Total</span>
+          <span id="cartTotal">$0.00</span>
+        </div>
+      </div>
+      <button class="btn-checkout" id="checkoutBtn">
+        Proceed to Simulated Checkout
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Product Details Modal -->
+  <div class="modal-backdrop" id="detailModalBackdrop">
+    <div class="modal-card detail-modal">
+      <button class="modal-close-btn" id="closeDetailModal">&times;</button>
+      <div class="detail-grid" id="detailModalContent">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulated Checkout Modal -->
+  <div class="modal-backdrop" id="checkoutModalBackdrop">
+    <div class="modal-card checkout-modal">
+      <button class="modal-close-btn" id="closeCheckoutModal">&times;</button>
+      <div class="modal-header">
+        <div class="modal-badge">HTTP POST &bull; LOAD BALANCED ROUTING</div>
+        <h2>Simulated Order Checkout</h2>
+        <p class="modal-subtitle">Submitting this order fires a <code>POST /api/orders</code> payload through the NetPulse proxy to a backend node.</p>
+      </div>
+
+      <div class="disclaimer-alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <div>
+          <strong>Educational Demonstration Environment</strong>
+          <p>No real charges, sensitive credentials, or credit cards are collected. Simulated card token used automatically.</p>
+        </div>
+      </div>
+
+      <form id="checkoutForm" class="checkout-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="custName">Customer Name / Lab Team</label>
+            <input type="text" id="custName" value="CN Lab Student Evaluation" required>
+          </div>
+          <div class="form-group">
+            <label for="custEmail">Academic Email</label>
+            <input type="email" id="custEmail" value="student@university.edu" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="custAddress">Shipping Destination / Lab Rack</label>
+          <input type="text" id="custAddress" value="Computer Networks Lab, Room 302, Rack B" required>
+        </div>
+
+        <div class="checkout-order-summary" id="checkoutSummaryBox">
+          <!-- Summary items -->
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelCheckoutBtn">Cancel</button>
+          <button type="submit" class="btn-primary" id="confirmOrderBtn">
+            <span class="btn-text">Transmit Order (POST /api/orders)</span>
+            <span class="spinner" id="checkoutSpinner" style="display:none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Success Modal -->
+  <div class="modal-backdrop" id="successModalBackdrop">
+    <div class="modal-card success-modal">
+      <div class="success-icon-wrapper">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h2 class="success-title">Order Confirmed!</h2>
+      <p class="success-desc">The simulated transaction was routed through the reverse proxy and processed successfully.</p>
+
+      <div class="telemetry-receipt" id="orderReceiptDetails">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div class="modal-actions-center">
+        <button class="btn-primary" id="continueShoppingBtn">Continue Browsing</button>
+        <button class="btn-secondary" id="viewInDashboardBtn">View Dashboard Metrics</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-Time Network Activity Panel (Collapsible Drawer) -->
+  <aside class="activity-drawer" id="activityDrawer">
+    <div class="activity-header">
+      <div class="activity-title">
+        <span class="pulse-indicator-small"></span>
+        <h3>Live Network Activity Telemetry</h3>
+      </div>
+      <div class="activity-controls">
+        <button id="clearActivityBtn" class="clear-activity-btn" title="Clear Activity Log">Clear</button>
+        <button id="closeActivityBtn" class="close-activity-btn">&times;</button>
+      </div>
+    </div>
+    <div class="activity-sub">
+      Shows actual HTTP responses and proxy headers (<code>X-Served-By</code>, <code>X-LB-Latency-Ms</code>, <code>X-Request-ID</code>).
+    </div>
+
+    <div class="activity-list" id="activityList">
+      <div class="empty-activity">
+        <p>No requests recorded yet.</p>
+        <small>Interact with products or run searches to see real traffic routed through backends.</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="brand-title">NetPulse Architecture</div>
+        <p>Dynamic Layer-7 Load Balancing, Fault-Tolerant Monitoring & Health Recovery system for Computer Networks.</p>
+      </div>
+      <div class="footer-col">
+        <h4>System Endpoints</h4>
+        <ul>
+          <li><a href="/dashboard" target="_blank">Observatory Dashboard (:8080/dashboard)</a></li>
+          <li><a href="http://127.0.0.1:9090/admin/backends" target="_blank">Admin API Pool Status (:9090)</a></li>
+          <li><a href="http://127.0.0.1:9090/admin/csv/download" target="_blank">Download Real-Time load_test.csv</a></li>
+          <li><a href="/__lb_info" target="_blank">Proxy Status Info (/__lb_info)</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Computer Networks Project</h4>
+        <p>Team of 4 Students &bull; Round Robin &bull; Weighted RR &bull; Least Connections &bull; IP Hash</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 NetPulse Project &bull; Educational Demonstration Environment
+    </div>
+  </footer>
+
+  <script src="/app/assets/app.js"></script>
+</body>
+</html>

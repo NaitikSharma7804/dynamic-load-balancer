@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetPulse | Intelligent Traffic Management & Load Balancing Console</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #090d16;
+            --bg-secondary: #0f172a;
+            --bg-card: rgba(17, 24, 39, 0.85);
+            --bg-card-hover: rgba(30, 41, 59, 0.9);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: #3b82f6;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-indigo: #6366f1;
+            
+            --state-healthy: #10b981;
+            --state-healthy-bg: rgba(16, 185, 129, 0.12);
+            --state-suspect: #f59e0b;
+            --state-suspect-bg: rgba(245, 158, 11, 0.12);
+            --state-unhealthy: #ef4444;
+            --state-unhealthy-bg: rgba(239, 68, 68, 0.15);
+            --state-recovering: #0284c7;
+            --state-recovering-bg: rgba(2, 132, 199, 0.15);
+            --state-draining: #8b5cf6;
+            --state-draining-bg: rgba(139, 92, 246, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation Header */
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 18px 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .brand-logo svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+
+        .brand-title h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .header-status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #34d399;
+        }
+
+        .header-status-pill.offline {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-dot.offline {
+            background-color: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .container {
+            max-width: 1540px;
+            margin: 0 auto;
+            padding: 28px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Overview Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 18px 20px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 8px;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-subtext {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Strategy & Control Panel */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-cyan);
+        }
+
+        .controls-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        select, input {
+            background: #1e293b;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: 1px solid transparent;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #1e293b;
+            color: var(--text-primary);
+            border-color: var(--border-subtle);
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        .btn-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-warning:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            background: rgba(16, 185, 129, 0.25);
+        }
+
+        /* Strategy Details Banner */
+        .algo-banner {
+            background: rgba(30, 41, 59, 0.6);
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 6px;
+            padding: 12px 18px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .algo-tag {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Clickable Algorithm Quick-Select Pills */
+        .algo-pills-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .algo-pill {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none;
+        }
+
+        .algo-pill:hover {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--text-primary);
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .algo-pill.active {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(6, 182, 212, 0.25));
+            border-color: var(--accent-cyan);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 0 14px rgba(6, 182, 212, 0.25);
+        }
+
+        .algo-pill .pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .algo-pill.active .pill-dot {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        /* Backend Server Cards Grid */
+        .backends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 18px;
+        }
+
+        .backend-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+
+        .backend-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            background: var(--bg-card-hover);
+        }
+
+        .backend-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .backend-name-box h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .backend-endpoint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Health Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-healthy {
+            background: var(--state-healthy-bg);
+            color: var(--state-healthy);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-suspect {
+            background: var(--state-suspect-bg);
+            color: var(--state-suspect);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-unhealthy {
+            background: var(--state-unhealthy-bg);
+            color: var(--state-unhealthy);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-recovering {
+            background: var(--state-recovering-bg);
+            color: var(--state-recovering);
+            border: 1px solid rgba(2, 132, 199, 0.3);
+        }
+
+        .badge-draining {
+            background: var(--state-draining-bg);
+            color: var(--state-draining);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .stats-mini-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stats-mini-cell {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .stats-mini-cell .cell-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stats-mini-cell .cell-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .backend-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .backend-card-actions .btn {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+
+        /* Charts Layout */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 340px;
+        }
+
+        .chart-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-box-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-canvas-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            min-height: 250px;
+        }
+
+        /* Health Event Timeline */
+        .timeline-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        table.timeline-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        table.timeline-table th {
+            background: #1e293b;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+
+        table.timeline-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        table.timeline-table tr:hover td {
+            background: rgba(30, 41, 59, 0.4);
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-dialog {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            width: 90%;
+            max-width: 480px;
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Toast Notifications */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 14px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 2000;
+            animation: slideIn 0.25s ease-out;
+        }
+
+        #toast.success { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        #toast.error { border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand-container">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+            </div>
+            <div class="brand-title">
+                <h1>NetPulse Console</h1>
+                <p>Intelligent Network Traffic Management & Adaptive Load Balancing System</p>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="/app" target="_blank" class="btn btn-primary" style="padding: 7px 14px; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; border-radius: 8px; font-weight: 600;">
+                🛍️ Demo Store (:8080/app)
+            </a>
+            <div id="connStatus" class="header-status-pill">
+                <span class="pulse-dot" id="pulseDot"></span>
+                <span id="connStatusText">Connected to Admin API (:9090)</span>
+            </div>
+            <button class="btn btn-secondary" onclick="manualRefresh()" style="padding: 7px 12px; font-size: 12px;">
+                🔄 Refresh
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. Key Metrics Cards -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Client Requests</div>
+                <div class="metric-value" id="valTotalRequests">0</div>
+                <div class="metric-subtext">Overall ingress requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Throughput</div>
+                <div class="metric-value" id="valRps">0.00</div>
+                <div class="metric-subtext">Requests per second (RPS)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Error Rate</div>
+                <div class="metric-value" id="valErrorRate">0.00%</div>
+                <div class="metric-subtext" id="valTotalErrors">0 errors total</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Avg Latency</div>
+                <div class="metric-value" id="valAvgLatency">0.00 <span style="font-size: 16px;">ms</span></div>
+                <div class="metric-subtext">Round-trip proxy latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">P95 Latency</div>
+                <div class="metric-value" id="valP95Latency">0.00 <span style="font-size: 16px;">ms</span></div>
+                <div class="metric-subtext">95th percentile latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">P99 Latency</div>
+                <div class="metric-value" id="valP99Latency">0.00 <span style="font-size: 16px;">ms</span></div>
+                <div class="metric-subtext">Tail latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Healthy Nodes</div>
+                <div class="metric-value" id="valHealthyCount" style="color: #34d399;">0 / 0</div>
+                <div class="metric-subtext">Active in scheduling pool</div>
+            </div>
+        </section>
+
+        <!-- 2. Scheduling Algorithm & Traffic Injection Panel -->
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    Traffic Scheduling Strategy & Simulation
+                </div>
+                <div class="controls-toolbar">
+                    <label style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Algorithm:</label>
+                    <select id="algoSelect" onchange="applyAlgorithm(this.value)">
+                        <option value="round_robin">Round Robin (Cyclic 1:1)</option>
+                        <option value="weighted_rr">Smooth Weighted Round Robin (Smooth WRR)</option>
+                        <option value="least_conn">Least Connections (Load Aware)</option>
+                        <option value="ip_hash">IP Hash (Client Session Stickiness)</option>
+                    </select>
+                    <button class="btn" onclick="applyAlgorithm()">Apply Strategy</button>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; margin-left: 4px;">
+                        <input type="checkbox" id="chkAutoDemo" checked style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--accent-blue);">
+                        ⚡ Auto-demonstrate traffic on switch
+                    </label>
+                    <button class="btn btn-secondary" onclick="sendTestTraffic(20)" id="btnTestTraffic">🚀 Send 20 Test Requests</button>
+                    <button class="btn btn-warning" onclick="resetMetrics()">Reset Metrics</button>
+                    <a href="http://127.0.0.1:9090/admin/csv/download" target="_blank" class="btn btn-secondary" style="text-decoration: none;" title="Download results/load_test.csv">📥 Export load_test.csv</a>
+                    <button class="btn btn-secondary" onclick="openAddBackendModal()">+ Register Backend</button>
+                </div>
+            </div>
+
+            <!-- Clickable Strategy Selection Pills -->
+            <div class="algo-pills-container">
+                <div class="algo-pill active" id="pill_round_robin" onclick="applyAlgorithm('round_robin')">
+                    <span class="pill-dot"></span>
+                    <span>Round Robin</span>
+                </div>
+                <div class="algo-pill" id="pill_weighted_rr" onclick="applyAlgorithm('weighted_rr')">
+                    <span class="pill-dot"></span>
+                    <span>Smooth Weighted RR (5:3:1)</span>
+                </div>
+                <div class="algo-pill" id="pill_least_conn" onclick="applyAlgorithm('least_conn')">
+                    <span class="pill-dot"></span>
+                    <span>Least Connections</span>
+                </div>
+                <div class="algo-pill" id="pill_ip_hash" onclick="applyAlgorithm('ip_hash')">
+                    <span class="pill-dot"></span>
+                    <span>IP Hash (Sticky)</span>
+                </div>
+            </div>
+
+            <div class="algo-banner">
+                <div>
+                    <strong>Active Policy:</strong> <span id="activeAlgoLabel" class="algo-tag">round_robin</span>
+                    <span id="algoDescriptionText" style="margin-left: 12px;">Distributes incoming HTTP traffic cyclically across healthy backend nodes.</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                    Load Balancer Proxy: <code class="font-mono" style="color: #60a5fa;">http://127.0.0.1:8080</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Dynamic Backend Fleet Cards -->
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><path d="M4 6h16v4H4V6zm0 8h16v4H4v-4z"/></svg>
+                    Managed Upstream Backend Nodes
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted);">
+                    Real-time status updated every 2 seconds via active health checks
+                </div>
+            </div>
+
+            <div class="backends-grid" id="backendsGrid">
+                <!-- Dynamically rendered backend cards -->
+            </div>
+        </section>
+
+        <!-- 4. Real-time Charts -->
+        <section class="charts-grid">
+            <div class="chart-box">
+                <div class="chart-box-header">
+                    <h3>📊 Request Distribution by Backend</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Actual measured traffic</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chartDistribution"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-box-header">
+                    <h3>⚡ Latency Trend (ms)</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Rolling window (Avg vs P95)</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chartLatency"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-box-header">
+                    <h3>📈 Throughput (RPS)</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Requests / second over time</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chartThroughput"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-box-header">
+                    <h3>🎯 HTTP Status Code Distribution</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">2xx, 4xx, 5xx breakdown</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="chartStatusCodes"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Health Event Timeline -->
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    Health Monitor Event Timeline & State Audit
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                    Last 20 state transitions & health probe detections
+                </div>
+            </div>
+
+            <div class="timeline-table-wrapper">
+                <table class="timeline-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Backend</th>
+                            <th>Event Action</th>
+                            <th>Previous State</th>
+                            <th>New State</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timelineTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                                Awaiting health events...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Add Backend Modal Dialog -->
+    <div class="modal-overlay" id="addBackendModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Register Upstream Backend</h3>
+                <button class="modal-close" onclick="closeAddBackendModal()">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                Add a new server node to the load balancer's dynamic pool. Active health checks will verify availability before sending traffic.
+            </p>
+            <div class="form-group">
+                <label>Backend Name</label>
+                <input type="text" id="modalInputName" placeholder="e.g. b4">
+            </div>
+            <div class="form-group">
+                <label>Host Address</label>
+                <input type="text" id="modalInputHost" value="127.0.0.1">
+            </div>
+            <div class="form-group">
+                <label>Port (1 - 65535)</label>
+                <input type="number" id="modalInputPort" placeholder="e.g. 5004">
+            </div>
+            <div class="form-group">
+                <label>Weight (>= 1)</label>
+                <input type="number" id="modalInputWeight" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Artificial Delay (ms)</label>
+                <input type="number" id="modalInputDelay" value="50" min="0">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeAddBackendModal()">Cancel</button>
+                <button class="btn" onclick="submitAddBackend()">Add Backend</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weight Edit Modal Dialog -->
+    <div class="modal-overlay" id="editWeightModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Update Node Weight</h3>
+                <button class="modal-close" onclick="closeEditWeightModal()">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary);">
+                Adjust traffic weighting for <strong id="weightTargetName" style="color: var(--accent-cyan);"></strong> without downtime.
+            </p>
+            <div class="form-group">
+                <label>New Configured Weight</label>
+                <input type="number" id="editWeightValue" min="1" value="1">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-secondary" onclick="closeEditWeightModal()">Cancel</button>
+                <button class="btn" onclick="submitEditWeight()">Update Weight</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast"></div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Resolve hostnames dynamically to support both localhost and 127.0.0.1 without origin conflicts
+        const host = window.location.hostname || "127.0.0.1";
+        const protocol = window.location.protocol;
+        const ADMIN_API = `${protocol}//${host}:9090`;
+        const LB_URL = `${protocol}//${host}:8080`;
+
+        let isPolling = false;
+        let lastSuccessfulPoll = 0;
+        let activeBackends = [];
+        let currentEditingBackend = null;
+        let isChangingAlgo = false;
+        let targetAlgoPending = null;
+
+        function updateAlgoPills(activeAlgo) {
+            const algos = ["round_robin", "weighted_rr", "least_conn", "ip_hash"];
+            algos.forEach(a => {
+                const pill = document.getElementById(`pill_${a}`);
+                if (pill) {
+                    if (a === activeAlgo) {
+                        pill.classList.add("active");
+                    } else {
+                        pill.classList.remove("active");
+                    }
+                }
+            });
+        }
+
+        // Bounded chart history (max 20 points)
+        const MAX_HISTORY = 20;
+        const historyTimestamps = [];
+        const historyAvgLatency = [];
+        const historyP95Latency = [];
+        const historyRps = [];
+
+        // Chart.js Instances
+        let chartDist = null;
+        let chartLat = null;
+        let chartThroughput = null;
+        let chartStatus = null;
+
+        // Algorithm descriptive mapping
+        const ALGO_DESCRIPTIONS = {
+            "round_robin": "Round Robin: Distributes traffic evenly in sequential cyclic order across healthy nodes.",
+            "weighted_rr": "Smooth Weighted Round Robin (Smooth WRR): Proportionally interleaves traffic based on server weights (5:3:1) without bursty clustering.",
+            "least_conn": "Least Connections: Dynamically routes incoming requests to the server with lowest active connection density.",
+            "ip_hash": "IP Hash: Hashes client IP to ensure deterministic session stickiness."
+        };
+
+        // Notification Toast Helper
+        function showToast(message, type = "info") {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = type;
+            toast.style.display = "flex";
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 3000);
+        }
+
+        // Generic API Fetch Wrapper
+        async function fetchJson(url, options = {}) {
+            const res = await fetch(url, options);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const detail = data.detail || `HTTP Error ${res.status}`;
+                throw new Error(detail);
+            }
+            return data;
+        }
+
+        // Initialize Charts with Dark Observatory Theme
+        function initCharts() {
+            Chart.defaults.color = "#94a3b8";
+            Chart.defaults.font.family = "'Inter', sans-serif";
+
+            // 1. Request Distribution Chart (Bar)
+            const ctxDist = document.getElementById("chartDistribution").getContext("2d");
+            chartDist = new Chart(ctxDist, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Requests Served',
+                        data: [],
+                        backgroundColor: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "rgba(255, 255, 255, 0.05)" }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 2. Latency Trend Chart (Line)
+            const ctxLat = document.getElementById("chartLatency").getContext("2d");
+            chartLat = new Chart(ctxLat, {
+                type: 'line',
+                data: {
+                    labels: historyTimestamps,
+                    datasets: [
+                        {
+                            label: 'Avg Latency (ms)',
+                            data: historyAvgLatency,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'P95 Latency (ms)',
+                            data: historyP95Latency,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "rgba(255, 255, 255, 0.05)" }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 3. Throughput Chart (Line)
+            const ctxThroughput = document.getElementById("chartThroughput").getContext("2d");
+            chartThroughput = new Chart(ctxThroughput, {
+                type: 'line',
+                data: {
+                    labels: historyTimestamps,
+                    datasets: [{
+                        label: 'RPS',
+                        data: historyRps,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "rgba(255, 255, 255, 0.05)" }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 4. Status Codes Chart (Doughnut)
+            const ctxStatus = document.getElementById("chartStatusCodes").getContext("2d");
+            chartStatus = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['2xx Success', '502 Bad Gateway', '503 Unavailable', '504 Timeout', 'Other'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#64748b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        // Render Backend Node Cards
+        function renderBackends(backends) {
+            activeBackends = backends || [];
+            const container = document.getElementById("backendsGrid");
+            container.innerHTML = "";
+
+            if (activeBackends.length === 0) {
+                container.innerHTML = "<div style='color: var(--text-muted); padding: 20px;'>No backend nodes configured in registry.</div>";
+                return;
+            }
+
+            activeBackends.forEach(b => {
+                const card = document.createElement("div");
+                card.className = "backend-card";
+
+                let badgeClass = "badge-healthy";
+                if (b.state === "UNHEALTHY") badgeClass = "badge-unhealthy";
+                else if (b.state === "SUSPECT") badgeClass = "badge-suspect";
+                else if (b.state === "RECOVERING") badgeClass = "badge-recovering";
+                else if (b.draining || b.state === "DRAINING") badgeClass = "badge-draining";
+
+                const isDrained = b.draining || b.state === "DRAINING";
+                const isUnhealthy = b.state === "UNHEALTHY";
+
+                card.innerHTML = `
+                    <div class="backend-header">
+                        <div class="backend-name-box">
+                            <h3>${b.name}</h3>
+                            <div class="backend-endpoint">${b.host}:${b.port}</div>
+                        </div>
+                        <span class="badge ${badgeClass}">${b.state}</span>
+                    </div>
+
+                    <div class="stats-mini-grid">
+                        <div class="stats-mini-cell">
+                            <div class="cell-lbl">Weight (Eff.)</div>
+                            <div class="cell-val">${b.weight} <span style="font-size: 13px; color: var(--text-muted);">(${b.effective_weight})</span></div>
+                        </div>
+                        <div class="stats-mini-cell">
+                            <div class="cell-lbl">Active Conns</div>
+                            <div class="cell-val">${b.active_connections}</div>
+                        </div>
+                        <div class="stats-mini-cell">
+                            <div class="cell-lbl">Requests</div>
+                            <div class="cell-val">${b.requests}</div>
+                        </div>
+                        <div class="stats-mini-cell">
+                            <div class="cell-lbl">Errors / Fails</div>
+                            <div class="cell-val">${b.errors} <span style="font-size: 12px; color: var(--text-muted);">(${b.consecutive_failures})</span></div>
+                        </div>
+                    </div>
+
+                    <div class="backend-card-actions">
+                        <button class="btn btn-secondary" onclick="openEditWeightModal('${b.name}', ${b.weight})">⚖️ Weight</button>
+                        ${isDrained
+                            ? `<button class="btn btn-success" onclick="undrainBackend('${b.name}')">Undrain</button>`
+                            : `<button class="btn btn-warning" onclick="drainBackend('${b.name}')">Drain</button>`
+                        }
+                        ${isUnhealthy
+                            ? `<button class="btn btn-success" onclick="restoreBackendDev('${b.name}')">Restore</button>`
+                            : `<button class="btn btn-danger" onclick="simulateFailureDev('${b.name}')">Fail</button>`
+                        }
+                        <button class="btn btn-danger" onclick="deleteBackend('${b.name}')" style="margin-left: auto;">🗑️</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Render Health Events Timeline
+        function renderTimeline(events) {
+            const tbody = document.getElementById("timelineTableBody");
+            if (!events || events.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">No health events recorded yet.</td></tr>`;
+                return;
+            }
+
+            const recentEvents = [...events].reverse().slice(0, 15);
+            tbody.innerHTML = recentEvents.map(e => {
+                const date = new Date(e.timestamp * 1000);
+                const timeStr = date.toTimeString().split(" ")[0] + `.${date.getMilliseconds().toString().padStart(3, '0')}`;
+                
+                let evtColor = "var(--text-primary)";
+                if (e.event.includes("FAIL")) evtColor = "#f87171";
+                else if (e.event.includes("RECOVER") || e.event.includes("OK")) evtColor = "#34d399";
+                else if (e.event.includes("DRAIN")) evtColor = "#c084fc";
+
+                return `
+                    <tr>
+                        <td class="font-mono" style="color: var(--text-muted);">${timeStr}</td>
+                        <td style="font-weight: 600; color: #60a5fa;">${e.backend}</td>
+                        <td style="color: ${evtColor}; font-weight: 500;">${e.event}</td>
+                        <td><code>${e.previous_state || "-"}</code></td>
+                        <td><code>${e.current_state || "-"}</code></td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        // Core Refresh Polling Function
+        async function refreshDashboard() {
+            if (isPolling) return;
+            isPolling = true;
+
+            try {
+                // 1. Fetch Backends
+                const backendsData = await fetchJson(`${ADMIN_API}/admin/backends`);
+                renderBackends(backendsData.backends || []);
+
+                // 2. Fetch Metrics
+                const metrics = await fetchJson(`${ADMIN_API}/admin/metrics`);
+                updateMetricsUI(metrics);
+
+                // 3. Fetch Active Algorithm
+                const algoData = await fetchJson(`${ADMIN_API}/admin/algorithm`);
+                if (algoData.algorithm) {
+                    const activeAlgo = algoData.algorithm;
+                    const sel = document.getElementById("algoSelect");
+                    
+                    // CRITICAL: Do NOT overwrite the dropdown if user is interacting or request is in-flight!
+                    const isUserFocusing = (document.activeElement === sel);
+                    if (!isChangingAlgo && !targetAlgoPending && !isUserFocusing) {
+                        if (sel && sel.value !== activeAlgo) {
+                            sel.value = activeAlgo;
+                        }
+                        document.getElementById("activeAlgoLabel").textContent = activeAlgo;
+                        document.getElementById("algoDescriptionText").textContent =
+                            ALGO_DESCRIPTIONS[activeAlgo] || "Custom scheduling strategy.";
+                        updateAlgoPills(activeAlgo);
+                    }
+                }
+
+                // 4. Fetch Health Events
+                const healthData = await fetchJson(`${ADMIN_API}/admin/health`);
+                renderTimeline(healthData.events || []);
+
+                // Connection status indicators
+                document.getElementById("connStatus").className = "header-status-pill";
+                document.getElementById("pulseDot").className = "pulse-dot";
+                document.getElementById("connStatusText").textContent = "Connected to Admin API (:9090)";
+
+                lastSuccessfulPoll = Date.now();
+
+            } catch (err) {
+                console.warn("Poll failed:", err.message);
+                document.getElementById("connStatus").className = "header-status-pill offline";
+                document.getElementById("pulseDot").className = "pulse-dot offline";
+                document.getElementById("connStatusText").textContent = "Admin API Offline (:9090)";
+            } finally {
+                isPolling = false;
+            }
+        }
+
+        function updateMetricsUI(metrics) {
+            document.getElementById("valTotalRequests").textContent = metrics.total_requests ?? 0;
+            document.getElementById("valRps").textContent = Number(metrics.rps ?? 0).toFixed(2);
+            document.getElementById("valErrorRate").textContent = `${((metrics.error_rate ?? 0) * 100).toFixed(2)}%`;
+            document.getElementById("valTotalErrors").textContent = `${metrics.total_errors ?? 0} errors (retries: ${metrics.total_retries ?? 0})`;
+
+            const lat = metrics.latency_ms || {};
+            document.getElementById("valAvgLatency").innerHTML = `${Number(lat.avg ?? 0).toFixed(2)} <span style="font-size: 16px;">ms</span>`;
+            document.getElementById("valP95Latency").innerHTML = `${Number(lat.p95 ?? 0).toFixed(2)} <span style="font-size: 16px;">ms</span>`;
+            document.getElementById("valP99Latency").innerHTML = `${Number(lat.p99 ?? 0).toFixed(2)} <span style="font-size: 16px;">ms</span>`;
+
+            const healthyCount = activeBackends.filter(b => b.state === "HEALTHY" && !b.draining).length;
+            document.getElementById("valHealthyCount").textContent = `${healthyCount} / ${activeBackends.length}`;
+
+            // Update rolling history
+            const nowStr = new Date().toTimeString().split(" ")[0];
+            historyTimestamps.push(nowStr);
+            historyAvgLatency.push(Number(lat.avg ?? 0));
+            historyP95Latency.push(Number(lat.p95 ?? 0));
+            historyRps.push(Number(metrics.rps ?? 0));
+
+            if (historyTimestamps.length > MAX_HISTORY) {
+                historyTimestamps.shift();
+                historyAvgLatency.shift();
+                historyP95Latency.shift();
+                historyRps.shift();
+            }
+
+            // Update Charts
+            if (chartLat) chartLat.update();
+            if (chartThroughput) chartThroughput.update();
+
+            // Distribution Chart
+            if (chartDist) {
+                const allNames = (activeBackends && activeBackends.length > 0)
+                    ? activeBackends.map(b => b.name)
+                    : (metrics.per_backend ? Object.keys(metrics.per_backend) : []);
+                
+                const bCounts = allNames.map(name => {
+                    if (metrics.per_backend && metrics.per_backend[name]) {
+                        return metrics.per_backend[name].requests || 0;
+                    }
+                    const found = activeBackends.find(b => b.name === name);
+                    return found ? found.requests || 0 : 0;
+                });
+
+                chartDist.data.labels = allNames;
+                chartDist.data.datasets[0].data = bCounts;
+                chartDist.update();
+            }
+
+            // Status Codes Chart
+            if (chartStatus && metrics.status_codes) {
+                let sc2xx = 0, sc502 = 0, sc503 = 0, sc504 = 0, scOther = 0;
+                for (const [code, count] of Object.entries(metrics.status_codes)) {
+                    const c = parseInt(code);
+                    if (c >= 200 && c < 300) sc2xx += count;
+                    else if (c === 502) sc502 += count;
+                    else if (c === 503) sc503 += count;
+                    else if (c === 504) sc504 += count;
+                    else scOther += count;
+                }
+                chartStatus.data.datasets[0].data = [sc2xx, sc502, sc503, sc504, scOther];
+                chartStatus.update();
+            }
+        }
+
+        // Action Handlers
+        async function applyAlgorithm(targetAlgo = null) {
+            const sel = document.getElementById("algoSelect");
+            const algo = targetAlgo || (sel ? sel.value : "round_robin");
+            const currentActive = document.getElementById("activeAlgoLabel").textContent.trim();
+
+            isChangingAlgo = true;
+            targetAlgoPending = algo;
+
+            // Optimistically update UI immediately - NO waiting, NO jumping back!
+            if (sel) sel.value = algo;
+            document.getElementById("activeAlgoLabel").textContent = algo;
+            document.getElementById("algoDescriptionText").textContent =
+                ALGO_DESCRIPTIONS[algo] || "Custom scheduling strategy.";
+            updateAlgoPills(algo);
+
+            try {
+                // 1. Switch algorithm in Load Balancer
+                await fetchJson(`${ADMIN_API}/admin/algorithm`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ algorithm: algo })
+                });
+
+                // 2. Automatically Reset Metrics so old algorithm data (e.g. 36:20:6) doesn't contaminate graph
+                await fetchJson(`${ADMIN_API}/admin/metrics/reset`, { method: "POST" });
+                historyTimestamps.length = 0;
+                historyAvgLatency.length = 0;
+                historyP95Latency.length = 0;
+                historyRps.length = 0;
+
+                // 3. Auto-Demonstration: Generate clean sample traffic for the selected algorithm
+                const autoDemo = document.getElementById("chkAutoDemo")?.checked ?? true;
+                if (autoDemo) {
+                    showToast(`Switched to ${algo}! Demonstrating traffic live...`, "info");
+                    // 21 requests = 7:7:7 for Round Robin (1:1:1)
+                    // 27 requests = 15:9:3 for Smooth WRR (5:3:1)
+                    // 21 requests for Least Connections and IP Hash
+                    const burstCount = (algo === "weighted_rr") ? 27 : 21;
+                    await sendTestTraffic(burstCount, true);
+                    showToast(`Algorithm ${algo} active! Graph updated to new distribution.`, "success");
+                } else {
+                    showToast(`Switched active algorithm to ${algo}! Metrics reset.`, "success");
+                    refreshDashboard();
+                }
+            } catch (err) {
+                showToast(`Failed to switch algorithm: ${err.message}`, "error");
+                // Revert UI on failure
+                if (sel) sel.value = currentActive;
+                document.getElementById("activeAlgoLabel").textContent = currentActive;
+                document.getElementById("algoDescriptionText").textContent =
+                    ALGO_DESCRIPTIONS[currentActive] || "Custom scheduling strategy.";
+                updateAlgoPills(currentActive);
+            } finally {
+                targetAlgoPending = null;
+                isChangingAlgo = false;
+                refreshDashboard();
+            }
+        }
+
+        async function resetMetrics() {
+            try {
+                await fetchJson(`${ADMIN_API}/admin/metrics/reset`, { method: "POST" });
+                historyTimestamps.length = 0;
+                historyAvgLatency.length = 0;
+                historyP95Latency.length = 0;
+                historyRps.length = 0;
+                showToast("System metrics and backend statistics reset.", "success");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function sendTestTraffic(count = 20, silent = false) {
+            const btn = document.getElementById("btnTestTraffic");
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = `Sending ${count}...`;
+            }
+            if (!silent) {
+                showToast(`Generating ${count} requests through Load Balancer (:8080)...`, "info");
+            }
+
+            let successful = 0;
+            const batchSize = 7;
+
+            for (let i = 0; i < count; i += batchSize) {
+                const promises = [];
+                for (let j = 0; j < batchSize && (i + j) < count; j++) {
+                    const reqIdx = i + j;
+                    promises.push(
+                        fetch(`${LB_URL}/test?req=${reqIdx}&t=${Date.now()}_${reqIdx}`, { cache: "no-store" })
+                            .then(res => { if (res.ok) successful++; })
+                            .catch(() => {})
+                    );
+                }
+                await Promise.all(promises);
+            }
+
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "🚀 Send 20 Test Requests";
+            }
+            if (!silent) {
+                showToast(`Traffic burst complete! (${successful}/${count} succeeded)`, "success");
+            }
+            await refreshDashboard();
+        }
+
+        async function drainBackend(name) {
+            try {
+                await fetchJson(`${ADMIN_API}/admin/backends/${name}/drain`, { method: "POST" });
+                showToast(`Backend ${name} is now draining traffic.`, "info");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function undrainBackend(name) {
+            try {
+                await fetchJson(`${ADMIN_API}/admin/backends/${name}/undrain`, { method: "POST" });
+                showToast(`Backend ${name} has been restored to service.`, "success");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function simulateFailureDev(name) {
+            try {
+                await fetchJson(`${ADMIN_API}/admin/dev/simulate-failure/${name}`, { method: "POST" });
+                showToast(`Simulated failure injected on ${name}!`, "error");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function restoreBackendDev(name) {
+            try {
+                await fetchJson(`${ADMIN_API}/admin/dev/restore/${name}`, { method: "POST" });
+                showToast(`Simulated recovery triggered on ${name}!`, "success");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function deleteBackend(name) {
+            if (!confirm(`Are you sure you want to remove backend '${name}'?`)) return;
+            try {
+                await fetchJson(`${ADMIN_API}/admin/backends/${name}`, { method: "DELETE" });
+                showToast(`Backend ${name} removed from registry.`, "info");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        // Modals
+        function openAddBackendModal() {
+            document.getElementById("addBackendModal").style.display = "flex";
+        }
+        function closeAddBackendModal() {
+            document.getElementById("addBackendModal").style.display = "none";
+        }
+
+        async function submitAddBackend() {
+            const name = document.getElementById("modalInputName").value.trim();
+            const host = document.getElementById("modalInputHost").value.trim() || "127.0.0.1";
+            const port = parseInt(document.getElementById("modalInputPort").value);
+            const weight = parseInt(document.getElementById("modalInputWeight").value) || 1;
+            const delay_ms = parseInt(document.getElementById("modalInputDelay").value) || 0;
+
+            if (!name) return showToast("Backend name is required.", "error");
+            if (isNaN(port) || port <= 0 || port > 65535) return showToast("Invalid port (1-65535).", "error");
+
+            try {
+                await fetchJson(`${ADMIN_API}/admin/backends`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, host, port, weight, delay_ms })
+                });
+                closeAddBackendModal();
+                showToast(`Backend ${name} registered! Health check initiated.`, "success");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        function openEditWeightModal(name, weight) {
+            currentEditingBackend = name;
+            document.getElementById("weightTargetName").textContent = name;
+            document.getElementById("editWeightValue").value = weight;
+            document.getElementById("editWeightModal").style.display = "flex";
+        }
+        function closeEditWeightModal() {
+            document.getElementById("editWeightModal").style.display = "none";
+            currentEditingBackend = null;
+        }
+
+        async function submitEditWeight() {
+            if (!currentEditingBackend) return;
+            const weight = parseInt(document.getElementById("editWeightValue").value);
+            if (isNaN(weight) || weight < 1) return showToast("Weight must be at least 1.", "error");
+
+            try {
+                await fetchJson(`${ADMIN_API}/admin/backends/${currentEditingBackend}/weight`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ weight })
+                });
+                closeEditWeightModal();
+                showToast(`Weight for ${currentEditingBackend} updated to ${weight}.`, "success");
+                refreshDashboard();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        function manualRefresh() {
+            refreshDashboard();
+            showToast("Refreshed dashboard metrics.", "info");
+        }
+
+        // App Initialization
+        window.addEventListener("DOMContentLoaded", () => {
+            initCharts();
+            refreshDashboard();
+            // Regular auto-refresh loop every 2 seconds
+            setInterval(refreshDashboard, 2000);
+        });
+    </script>
+</body>
+</html>

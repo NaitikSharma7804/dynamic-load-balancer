@@ -1,0 +1,737 @@
+[
+  {
+    "order_id": "ORD-F752A8A4",
+    "status": "CONFIRMED",
+    "timestamp": 1792427773.5029597,
+    "date_str": "2026-10-19 22:06:13",
+    "customer": {
+      "name": "Bob Jones",
+      "email": "bob@university.edu",
+      "address": "Networking Lab Room 101"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-102",
+        "name": "NetPulse Layer-3 CoreSwitch 24P",
+        "unit_price": 799.0,
+        "quantity": 1,
+        "line_total": 799.0
+      }
+    ],
+    "summary": {
+      "subtotal": 799.0,
+      "tax": 63.92,
+      "shipping": 0.0,
+      "total": 862.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "backend",
+      "processed_at": 1792427773.5029597
+    }
+  },
+  {
+    "order_id": "ORD-B02FDCCA",
+    "status": "CONFIRMED",
+    "timestamp": 1792427773.4456775,
+    "date_str": "2026-10-19 22:06:13",
+    "customer": {
+      "name": "Alice Smith",
+      "email": "alice@test.edu",
+      "address": "Rack A, Switch Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-104",
+        "name": "NetPulse SFP+ 10G-SR Optical Transceiver",
+        "unit_price": 45.0,
+        "quantity": 2,
+        "line_total": 90.0
+      }
+    ],
+    "summary": {
+      "subtotal": 589.0,
+      "tax": 47.12,
+      "shipping": 0.0,
+      "total": 636.12,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1792427773.4456775
+    }
+  },
+  {
+    "order_id": "ORD-920D5EA3",
+    "status": "CONFIRMED",
+    "timestamp": 1792427772.577253,
+    "date_str": "2026-10-19 22:06:12",
+    "customer": {
+      "name": "Viva Evaluator Demo",
+      "email": "examiner@university.edu",
+      "address": "Faculty of Engineering & Computer Science"
+    },
+    "payment": {
+      "method": "Simulated Lab Transaction",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-103",
+        "name": "PulseWave Wi-Fi 7 Enterprise AP",
+        "unit_price": 329.0,
+        "quantity": 2,
+        "line_total": 658.0
+      }
+    ],
+    "summary": {
+      "subtotal": 1157.0,
+      "tax": 92.56,
+      "shipping": 0.0,
+      "total": 1249.56,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b1",
+      "processed_at": 1792427772.577253
+    }
+  },
+  {
+    "order_id": "ORD-B820FC29",
+    "status": "CONFIRMED",
+    "timestamp": 1792427587.5942323,
+    "date_str": "2026-10-19 22:03:07",
+    "customer": {
+      "name": "Bob Jones",
+      "email": "bob@university.edu",
+      "address": "Networking Lab Room 101"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-102",
+        "name": "NetPulse Layer-3 CoreSwitch 24P",
+        "unit_price": 799.0,
+        "quantity": 1,
+        "line_total": 799.0
+      }
+    ],
+    "summary": {
+      "subtotal": 799.0,
+      "tax": 63.92,
+      "shipping": 0.0,
+      "total": 862.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "backend",
+      "processed_at": 1792427587.5942323
+    }
+  },
+  {
+    "order_id": "ORD-FCF9F325",
+    "status": "CONFIRMED",
+    "timestamp": 1792427587.54384,
+    "date_str": "2026-10-19 22:03:07",
+    "customer": {
+      "name": "Alice Smith",
+      "email": "alice@test.edu",
+      "address": "Rack A, Switch Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-104",
+        "name": "NetPulse SFP+ 10G-SR Optical Transceiver",
+        "unit_price": 45.0,
+        "quantity": 2,
+        "line_total": 90.0
+      }
+    ],
+    "summary": {
+      "subtotal": 589.0,
+      "tax": 47.12,
+      "shipping": 0.0,
+      "total": 636.12,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1792427587.54384
+    }
+  },
+  {
+    "order_id": "ORD-1DEF2195",
+    "status": "CONFIRMED",
+    "timestamp": 1792427586.853528,
+    "date_str": "2026-10-19 22:03:06",
+    "customer": {
+      "name": "Viva Evaluator Demo",
+      "email": "examiner@university.edu",
+      "address": "Faculty of Engineering & Computer Science"
+    },
+    "payment": {
+      "method": "Simulated Lab Transaction",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-103",
+        "name": "PulseWave Wi-Fi 7 Enterprise AP",
+        "unit_price": 329.0,
+        "quantity": 2,
+        "line_total": 658.0
+      }
+    ],
+    "summary": {
+      "subtotal": 1157.0,
+      "tax": 92.56,
+      "shipping": 0.0,
+      "total": 1249.56,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1792427586.853528
+    }
+  },
+  {
+    "order_id": "ORD-28F01DB8",
+    "status": "CONFIRMED",
+    "timestamp": 1792426875.0304537,
+    "date_str": "2026-10-19 21:51:15",
+    "customer": {
+      "name": "Bob Jones",
+      "email": "bob@university.edu",
+      "address": "Networking Lab Room 101"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-102",
+        "name": "NetPulse Layer-3 CoreSwitch 24P",
+        "unit_price": 799.0,
+        "quantity": 1,
+        "line_total": 799.0
+      }
+    ],
+    "summary": {
+      "subtotal": 799.0,
+      "tax": 63.92,
+      "shipping": 0.0,
+      "total": 862.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "backend",
+      "processed_at": 1792426875.0304537
+    }
+  },
+  {
+    "order_id": "ORD-1C1107A7",
+    "status": "CONFIRMED",
+    "timestamp": 1792426874.949247,
+    "date_str": "2026-10-19 21:51:14",
+    "customer": {
+      "name": "Alice Smith",
+      "email": "alice@test.edu",
+      "address": "Rack A, Switch Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-104",
+        "name": "NetPulse SFP+ 10G-SR Optical Transceiver",
+        "unit_price": 45.0,
+        "quantity": 2,
+        "line_total": 90.0
+      }
+    ],
+    "summary": {
+      "subtotal": 589.0,
+      "tax": 47.12,
+      "shipping": 0.0,
+      "total": 636.12,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1792426874.949247
+    }
+  },
+  {
+    "order_id": "ORD-AB12BB5A",
+    "status": "CONFIRMED",
+    "timestamp": 1791985709.1049323,
+    "date_str": "2026-10-14 19:18:29",
+    "customer": {
+      "name": "CN Lab Student Evaluation",
+      "email": "student@university.edu",
+      "address": "Computer Networks Lab, Room 302, Rack B"
+    },
+    "payment": {
+      "method": "Simulated Card (Lab Demonstration)",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      }
+    ],
+    "summary": {
+      "subtotal": 499.0,
+      "tax": 39.92,
+      "shipping": 0.0,
+      "total": 538.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "b3",
+      "processed_at": 1791985709.1049323
+    }
+  },
+  {
+    "order_id": "ORD-FA40DF37",
+    "status": "CONFIRMED",
+    "timestamp": 1791985670.5897875,
+    "date_str": "2026-10-14 19:17:50",
+    "customer": {
+      "name": "CN Lab Student Evaluation",
+      "email": "student@university.edu",
+      "address": "Computer Networks Lab, Room 302, Rack B"
+    },
+    "payment": {
+      "method": "Simulated Card (Lab Demonstration)",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      }
+    ],
+    "summary": {
+      "subtotal": 499.0,
+      "tax": 39.92,
+      "shipping": 0.0,
+      "total": 538.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "b1",
+      "processed_at": 1791985670.5897875
+    }
+  },
+  {
+    "order_id": "ORD-0803CF1C",
+    "status": "CONFIRMED",
+    "timestamp": 1791985177.9143574,
+    "date_str": "2026-10-14 19:09:37",
+    "customer": {
+      "name": "Bob Jones",
+      "email": "bob@university.edu",
+      "address": "Networking Lab Room 101"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-102",
+        "name": "NetPulse Layer-3 CoreSwitch 24P",
+        "unit_price": 799.0,
+        "quantity": 1,
+        "line_total": 799.0
+      }
+    ],
+    "summary": {
+      "subtotal": 799.0,
+      "tax": 63.92,
+      "shipping": 0.0,
+      "total": 862.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "backend",
+      "processed_at": 1791985177.9143574
+    }
+  },
+  {
+    "order_id": "ORD-E83A8AB6",
+    "status": "CONFIRMED",
+    "timestamp": 1791985177.8681483,
+    "date_str": "2026-10-14 19:09:37",
+    "customer": {
+      "name": "Alice Smith",
+      "email": "alice@test.edu",
+      "address": "Rack A, Switch Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-104",
+        "name": "NetPulse SFP+ 10G-SR Optical Transceiver",
+        "unit_price": 45.0,
+        "quantity": 2,
+        "line_total": 90.0
+      }
+    ],
+    "summary": {
+      "subtotal": 589.0,
+      "tax": 47.12,
+      "shipping": 0.0,
+      "total": 636.12,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1791985177.8681483
+    }
+  },
+  {
+    "order_id": "ORD-04D5ACE3",
+    "status": "CONFIRMED",
+    "timestamp": 1791985176.6396048,
+    "date_str": "2026-10-14 19:09:36",
+    "customer": {
+      "name": "Viva Evaluator Demo",
+      "email": "examiner@university.edu",
+      "address": "Faculty of Engineering & Computer Science"
+    },
+    "payment": {
+      "method": "Simulated Lab Transaction",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-103",
+        "name": "PulseWave Wi-Fi 7 Enterprise AP",
+        "unit_price": 329.0,
+        "quantity": 2,
+        "line_total": 658.0
+      }
+    ],
+    "summary": {
+      "subtotal": 1157.0,
+      "tax": 92.56,
+      "shipping": 0.0,
+      "total": 1249.56,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b3",
+      "processed_at": 1791985176.6396048
+    }
+  },
+  {
+    "order_id": "ORD-67ECAC39",
+    "status": "CONFIRMED",
+    "timestamp": 1791960345.2079086,
+    "date_str": "2026-10-14 12:15:45",
+    "customer": {
+      "name": "Viva Evaluator Demo",
+      "email": "examiner@university.edu",
+      "address": "Faculty of Engineering & Computer Science"
+    },
+    "payment": {
+      "method": "Simulated Lab Transaction",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-103",
+        "name": "PulseWave Wi-Fi 7 Enterprise AP",
+        "unit_price": 329.0,
+        "quantity": 2,
+        "line_total": 658.0
+      }
+    ],
+    "summary": {
+      "subtotal": 1157.0,
+      "tax": 92.56,
+      "shipping": 0.0,
+      "total": 1249.56,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b3",
+      "processed_at": 1791960345.2079086
+    }
+  },
+  {
+    "order_id": "ORD-6C6DD958",
+    "status": "CONFIRMED",
+    "timestamp": 1791959374.6404335,
+    "date_str": "2026-10-14 11:59:34",
+    "customer": {
+      "name": "Bob Jones",
+      "email": "bob@university.edu",
+      "address": "Networking Lab Room 101"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-102",
+        "name": "NetPulse Layer-3 CoreSwitch 24P",
+        "unit_price": 799.0,
+        "quantity": 1,
+        "line_total": 799.0
+      }
+    ],
+    "summary": {
+      "subtotal": 799.0,
+      "tax": 63.92,
+      "shipping": 0.0,
+      "total": 862.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "backend",
+      "processed_at": 1791959374.6404335
+    }
+  },
+  {
+    "order_id": "ORD-9940D8B9",
+    "status": "CONFIRMED",
+    "timestamp": 1791959374.5795515,
+    "date_str": "2026-10-14 11:59:34",
+    "customer": {
+      "name": "Alice Smith",
+      "email": "alice@test.edu",
+      "address": "Rack A, Switch Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-104",
+        "name": "NetPulse SFP+ 10G-SR Optical Transceiver",
+        "unit_price": 45.0,
+        "quantity": 2,
+        "line_total": 90.0
+      }
+    ],
+    "summary": {
+      "subtotal": 589.0,
+      "tax": 47.12,
+      "shipping": 0.0,
+      "total": 636.12,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1791959374.5795515
+    }
+  },
+  {
+    "order_id": "ORD-3188C5CC",
+    "status": "CONFIRMED",
+    "timestamp": 1791959332.459588,
+    "date_str": "2026-10-14 11:58:52",
+    "customer": {
+      "name": "Bob Jones",
+      "email": "bob@university.edu",
+      "address": "Networking Lab Room 101"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-102",
+        "name": "NetPulse Layer-3 CoreSwitch 24P",
+        "unit_price": 799.0,
+        "quantity": 1,
+        "line_total": 799.0
+      }
+    ],
+    "summary": {
+      "subtotal": 799.0,
+      "tax": 63.92,
+      "shipping": 0.0,
+      "total": 862.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "backend",
+      "processed_at": 1791959332.459588
+    }
+  },
+  {
+    "order_id": "ORD-492D38DC",
+    "status": "CONFIRMED",
+    "timestamp": 1791959332.3744783,
+    "date_str": "2026-10-14 11:58:52",
+    "customer": {
+      "name": "Alice Smith",
+      "email": "alice@test.edu",
+      "address": "Rack A, Switch Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      },
+      {
+        "product_id": "prod-104",
+        "name": "NetPulse SFP+ 10G-SR Optical Transceiver",
+        "unit_price": 45.0,
+        "quantity": 2,
+        "line_total": 90.0
+      }
+    ],
+    "summary": {
+      "subtotal": 589.0,
+      "tax": 47.12,
+      "shipping": 0.0,
+      "total": 636.12,
+      "item_count": 3
+    },
+    "network_telemetry": {
+      "serving_backend": "b2",
+      "processed_at": 1791959332.3744783
+    }
+  },
+  {
+    "order_id": "ORD-2C313842",
+    "status": "CONFIRMED",
+    "timestamp": 1791959332.0097375,
+    "date_str": "2026-10-14 11:58:52",
+    "customer": {
+      "name": "Student",
+      "email": "a@b.com",
+      "address": "Lab"
+    },
+    "payment": {
+      "method": "Simulated Card",
+      "note": "SIMULATED TRANSACTION \u2014 NO REAL PAYMENT REQUIRED"
+    },
+    "items": [
+      {
+        "product_id": "prod-101",
+        "name": "NetPulse PulseRoute Pro 10G",
+        "unit_price": 499.0,
+        "quantity": 1,
+        "line_total": 499.0
+      }
+    ],
+    "summary": {
+      "subtotal": 499.0,
+      "tax": 39.92,
+      "shipping": 0.0,
+      "total": 538.92,
+      "item_count": 1
+    },
+    "network_telemetry": {
+      "serving_backend": "b1",
+      "processed_at": 1791959332.0097375
+    }
+  }
+]
