@@ -17,13 +17,11 @@ from loadbalancer.proxy import ProxyEngine
 
 
 def create_components(config_path="config.yaml"):
-
     config = load_config(config_path)
 
     pool = BackendPool()
 
     for backend_config in config.backends:
-
         backend = Backend(
             name=backend_config.name,
             host=backend_config.host,
@@ -31,7 +29,6 @@ def create_components(config_path="config.yaml"):
             weight=backend_config.weight,
             delay_ms=backend_config.delay_ms,
         )
-
         pool.add(backend)
 
     metrics = Metrics()
@@ -55,52 +52,30 @@ def create_components(config_path="config.yaml"):
 
     proxy.health = health
 
-    return (
-        config,
-        pool,
-        metrics,
-        proxy,
-        health,
-    )
+    return config, pool, metrics, proxy, health
 
 
-def create_proxy_app(
-    config,
-    pool,
-    metrics,
-    proxy,
-    health,
-):
-
+def create_proxy_app(config, pool, metrics, proxy, health):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-
         print("=" * 70)
         print("Dynamic Load Balancer + Health Monitor")
         print("=" * 70)
 
         print(
             f"Load Balancer : "
-            f"http://{config.server.host}:"
-            f"{config.server.port}"
+            f"http://{config.server.host}:{config.server.port}"
         )
-
         print(
-            f"Admin API    : "
-            f"http://{config.admin.host}:"
-            f"{config.admin.port}"
+            f"Admin API     : "
+            f"http://{config.admin.host}:{config.admin.port}"
         )
-
-        print(
-            f"Algorithm    : "
-            f"{proxy.algorithm_name}"
-        )
+        print(f"Algorithm     : {proxy.algorithm_name}")
 
         print("=" * 70)
         print("Configured backends:")
 
         for backend in pool.all():
-
             print(
                 f"  {backend.name} -> "
                 f"{backend.host}:{backend.port} "
@@ -110,9 +85,7 @@ def create_proxy_app(
         print("=" * 70)
 
         await health.start()
-
         yield
-
         await health.stop()
         await proxy.close()
 
@@ -144,45 +117,31 @@ def create_proxy_app(
 
     dashboard_path = os.path.abspath(
         os.path.join(
-            os.path.dirname(
-                os.path.dirname(__file__)
-            ),
+            os.path.dirname(os.path.dirname(__file__)),
             "dashboard",
         )
     )
 
     if os.path.isdir(dashboard_path):
-
         app.mount(
             "/dashboard/static",
-            StaticFiles(
-                directory=dashboard_path
-            ),
+            StaticFiles(directory=dashboard_path),
             name="dashboard-static",
         )
 
     @app.get("/dashboard")
     async def dashboard():
-
-        index_path = os.path.join(
-            dashboard_path,
-            "index.html",
-        )
+        index_path = os.path.join(dashboard_path, "index.html")
 
         if not os.path.exists(index_path):
-
             return JSONResponse(
                 status_code=404,
-                content={
-                    "error": "Dashboard not found"
-                },
+                content={"error": "Dashboard not found"},
             )
 
         return FileResponse(index_path)
 
-    # ---------------------------------------------------------------
-    # NetPulse Demo Store frontend (/app)
-    # ---------------------------------------------------------------
+    # NetPulse Demo Store frontend
     app_path = os.path.abspath(
         os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -192,6 +151,7 @@ def create_proxy_app(
 
     if os.path.isdir(app_path):
         assets_path = os.path.join(app_path, "assets")
+
         if os.path.isdir(assets_path):
             app.mount(
                 "/app/assets",
@@ -202,16 +162,17 @@ def create_proxy_app(
     @app.get("/app")
     async def demo_store():
         index_path = os.path.join(app_path, "index.html")
+
         if not os.path.exists(index_path):
             return JSONResponse(
                 status_code=404,
                 content={"error": "NetPulse Demo Store not found"},
             )
+
         return FileResponse(index_path)
 
     @app.get("/__lb_info")
     async def lb_info():
-
         return {
             "service": "Dynamic Load Balancer",
             "algorithm": proxy.algorithm_name,
@@ -220,7 +181,6 @@ def create_proxy_app(
 
     @app.get("/")
     async def root():
-
         return {
             "service": "NetPulse Dynamic Load Balancer",
             "demo_store": "/app",
@@ -240,38 +200,17 @@ def create_proxy_app(
             "OPTIONS",
         ],
     )
-    async def proxy_request(
-        request: Request,
-        path: str,
-    ):
-
+    async def proxy_request(request: Request, path: str):
         return await proxy.forward(request)
 
     return app
 
 
-def create_admin_app(
-    config,
-    pool,
-    metrics,
-    proxy,
-    health,
-):
-
+def create_admin_app(config, pool, metrics, proxy, health):
     app = FastAPI(
         title="Load Balancer Admin API",
         version="1.0.0",
     )
-
-    # --------------------------------------------------
-    # CORS CONFIGURATION
-    # --------------------------------------------------
-    # The dashboard runs on port 8080 while the
-    # Admin API runs on port 9090.
-    #
-    # Because these are different origins, the browser
-    # requires CORS permission.
-    # --------------------------------------------------
 
     app.add_middleware(
         CORSMiddleware,
@@ -293,18 +232,14 @@ def create_admin_app(
         metrics=metrics,
         health=health,
     )
-
     app.include_router(router)
 
     @app.get("/health")
     async def admin_health_alias():
-        return {
-            "events": health.get_events()
-        }
+        return {"events": health.get_events()}
 
     @app.get("/")
     async def admin_root():
-
         return {
             "service": "Load Balancer Admin API",
             "endpoints": [
@@ -319,14 +254,14 @@ def create_admin_app(
 
 
 def main():
+    # Read the configuration file from the environment.
+    # Kubernetes sets this to config.k8s.yaml.
+    config_path = os.environ.get("LB_CONFIG", "config.yaml")
+    print(f"Loading configuration: {config_path}")
 
-    (
-        config,
-        pool,
-        metrics,
-        proxy,
-        health,
-    ) = create_components()
+    config, pool, metrics, proxy, health = create_components(
+        config_path
+    )
 
     proxy_app = create_proxy_app(
         config,
@@ -358,24 +293,16 @@ def main():
         log_level="info",
     )
 
-    proxy_server = uvicorn.Server(
-        proxy_config
-    )
-
-    admin_server = uvicorn.Server(
-        admin_config
-    )
+    proxy_server = uvicorn.Server(proxy_config)
+    admin_server = uvicorn.Server(admin_config)
 
     async def run_servers():
-
         await asyncio.gather(
             proxy_server.serve(),
             admin_server.serve(),
         )
 
-    asyncio.run(
-        run_servers()
-    )
+    asyncio.run(run_servers())
 
 
 if __name__ == "__main__":
