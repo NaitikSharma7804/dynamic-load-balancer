@@ -6,6 +6,10 @@ pipeline {
         timestamps()
     }
 
+    environment {
+        DOCKERHUB_REPO = 'naitik7804/dynamic-load-balancer'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -27,9 +31,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    .venv/bin/python -m pytest tests/ -v
-                '''
+                sh '.venv/bin/python -m pytest tests/ -v'
             }
         }
 
@@ -37,17 +39,37 @@ pipeline {
             steps {
                 sh '''
                     docker build -t dynamic-load-balancer:${BUILD_NUMBER} .
+                    docker tag dynamic-load-balancer:${BUILD_NUMBER} ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                    docker tag dynamic-load-balancer:${BUILD_NUMBER} ${DOCKERHUB_REPO}:latest
                 '''
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_TOKEN'
+                )]) {
+                    sh '''
+                        set +x
+                        echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                        docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                        docker push ${DOCKERHUB_REPO}:latest
+                        docker logout
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'CI pipeline completed successfully!'
+            echo 'CI/CD pipeline completed successfully, and the image was pushed to Docker Hub!'
         }
         failure {
-            echo 'CI pipeline failed. Check the stage logs.'
+            echo 'Pipeline failed. Check the stage logs.'
         }
     }
 }
