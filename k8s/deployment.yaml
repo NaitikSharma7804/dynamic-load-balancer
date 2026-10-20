@@ -1,0 +1,41 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-load-balancer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynamic-load-balancer
+  template:
+    metadata:
+      labels:
+        app: dynamic-load-balancer
+    spec:
+      containers:
+        - name: load-balancer
+          image: naitik7804/dynamic-load-balancer:latest
+          imagePullPolicy: Always
+          env:
+            - name: LB_CONFIG
+              value: config.k8s.yaml
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
