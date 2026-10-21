@@ -1,24 +1,4 @@
 request_id,status_code,latency_ms,success,error,served_by
-3,200,85.812,True,,b1
-0,200,100.152,True,,b1
-1,200,140.354,True,,b2
-4,200,134.443,True,,b2
-6,200,66.976,True,,b1
-2,200,229.934,True,,b3
-5,200,226.717,True,,b3
-9,200,92.439,True,,b1
-12,200,597.561,True,,b1
-7,200,619.499,True,,b2
-10,200,614.548,True,,b2
-8,200,622.495,True,,b3
-11,200,616.922,True,,b3
-13,200,451.91,True,,b2
-15,200,66.727,True,,b1
-18,200,69.344,True,,b1
-16,200,113.701,True,,b2
-19,200,116.62,True,,b2
-14,200,227.289,True,,b3
-17,200,235.125,True,,b3
-20,200,220.901,True,,b3
-0,200,67.552,True,,b1
-1,200,735.281,True,,b2
+0,503,0.004,False,No healthy backend available,none
+0,502,0.238,False,Upstream connection failed: ConnectError,dead_backend
+0,504,0.107,False,Upstream backend timed out: ReadTimeout,slow_backend

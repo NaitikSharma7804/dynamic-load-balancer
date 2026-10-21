@@ -223,3 +223,25 @@ def test_remove_backend(admin_client):
     ]
 
     assert "temporary" not in names
+
+
+def test_admin_cors_support(admin_client):
+    # Test preflight OPTIONS request from Live Server origin
+    options_res = admin_client.options(
+        "/admin/algorithm",
+        headers={
+            "Origin": "http://127.0.0.1:5500",
+            "Access-Control-Request-Method": "PUT",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert options_res.status_code == 200
+    assert options_res.headers.get("access-control-allow-origin") == "http://127.0.0.1:5500"
+
+    # Test GET /admin/backends from Live Server origin
+    get_res = admin_client.get(
+        "/admin/backends",
+        headers={"Origin": "http://127.0.0.1:5500"},
+    )
+    assert get_res.status_code == 200
+    assert get_res.headers.get("access-control-allow-origin") == "http://127.0.0.1:5500"

@@ -97,12 +97,7 @@ def create_proxy_app(config, pool, metrics, proxy, health):
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://127.0.0.1:8080",
-            "http://localhost:8080",
-            "http://127.0.0.1:9090",
-            "http://localhost:9090",
-        ],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -214,12 +209,7 @@ def create_admin_app(config, pool, metrics, proxy, health):
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://127.0.0.1:8080",
-            "http://localhost:8080",
-            "http://127.0.0.1:9090",
-            "http://localhost:9090",
-        ],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
